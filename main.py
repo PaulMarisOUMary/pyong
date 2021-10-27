@@ -2,8 +2,8 @@ import pygame
 from pygame import locals
 
 # Window Settings
-WIN_WIDTH = 800
-WIN_HEIGHT = 600
+WIN_WIDTH = 1400
+WIN_HEIGHT = 850
 FPS = 60
 SPEED = 1
 Running = True
@@ -17,7 +17,7 @@ PAD_RIGHT = [WIN_WIDTH-PAD_WIDTH*2, 0]
 # Ball Settings
 BALL_RADIUS = 5
 BALL = [WIN_WIDTH/2 - BALL_RADIUS/2, WIN_HEIGHT/2 - BALL_RADIUS/2]
-BALL_vX = -3
+BALL_vX = 1
 BALL_vY = 1
 
 # Colors
@@ -41,7 +41,7 @@ def keys():
                 global Running
                 Running = False
 
-def moveBall():
+def checkBall():
     global BALL, BALL_vX, BALL_vY, points, SPEED
 
     if BALL[0] <= 0 or BALL[0] >= WIN_WIDTH: #Left & Right bounce (without pad)
@@ -54,14 +54,23 @@ def moveBall():
     if BALL[0] <= PAD_WIDTH*2+BALL_RADIUS: #Left bounce 
         if BALL[1] >= PAD_LEFT[1] and BALL[1] <= PAD_LEFT[1]+PAD_HEIGHT: #Left & Right bounce (with pad)
             BALL_vX = -BALL_vX
+            SPEED += 1
     elif BALL[0] >= WIN_WIDTH-PAD_WIDTH*2-10: #Right bounce
         if BALL[1] >= PAD_RIGHT[1] and BALL[1] <= PAD_RIGHT[1]+PAD_HEIGHT: #Left & Right bounce (with pad)
             BALL_vX = -BALL_vX
+            SPEED += 1
 
-    BALL[0] -= BALL_vX * SPEED
-    BALL[1] -= BALL_vY * SPEED
+def moveBall():
+    for _ in range(SPEED+1):
+        checkBall()
+        aimBall()
+        BALL[0] -= BALL_vX
+        BALL[1] -= BALL_vY 
 
-    PAD_RIGHT[1] = BALL[1]-PAD_HEIGHT/2
+def aimBall():
+    if BALL[1] >= 0+PAD_HEIGHT/2 and BALL[1] <= WIN_HEIGHT-PAD_HEIGHT/2:
+        PAD_RIGHT[1] = BALL[1]-PAD_HEIGHT/2
+        PAD_LEFT[1] = BALL[1]-PAD_HEIGHT/2 # Delete this line to play with the mouse
 
 def drawPADS():
     pygame.draw.rect(screen, color=blue, rect=(PAD_LEFT[0], PAD_LEFT[1], PAD_WIDTH, PAD_HEIGHT), border_radius=5)
@@ -71,7 +80,7 @@ def drawBALL():
     pygame.draw.circle(screen, green, BALL, BALL_RADIUS)
 
 while Running:
-    pygame.display.set_caption("PONG : {}pts | {} FPS".format(points, int(clock.get_fps())))
+    pygame.display.set_caption("PONG : {}pts | {} FPS | {} SPEED".format(points, int(clock.get_fps()), SPEED))
 
     keys()
     moveBall()
@@ -80,8 +89,6 @@ while Running:
     screen.fill((0, 0, 0)) # Reset Frame
     drawPADS()
     drawBALL()
-
-    SPEED += 0.005
 
     # Update Rendering
     clock.tick(FPS)
